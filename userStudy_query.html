@@ -1,0 +1,1325 @@
+<!-- You must include this JavaScript file -->
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+
+<!-- For the full list of available Crowd HTML Elements and their input/output documentation,
+      please refer to https://docs.aws.amazon.com/sagemaker/latest/dg/sms-ui-template-reference.html -->
+<head>
+<title>Query User Study</title>
+<style type="text/css">
+  table, th, td {
+  border: 1px solid black;
+}
+
+  body{
+    height: 200px
+  }
+  .questions {
+    float:right;
+    width:55%;
+  }
+  .counter-text{
+    font-weight:bold;
+    font-size:1.5em;
+    visibility: hidden;
+    width: 0;
+    height: 0;
+}
+  .subpart{
+   visibility:hidden;
+  }
+
+  .videoPlay{
+    float:left;
+    width:40%;
+  }
+
+  .leftPadding{
+    padding-left: 50px;
+  }
+
+  /* The popup form - hidden by default */
+  .form-popup {
+    display: none;
+    position: fixed;
+    bottom: 50;
+    right: 450px;
+    border: 3px solid #f1f1f1;
+  }
+
+  /* Add styles to the form container */
+  .form-container {
+    max-width: 700px;
+    padding: 10px;
+    background-color: white;
+  }
+
+  /* Full-width input fields */
+  .form-container input[type=text], .form-container input[type=password] {
+    width: 100%;
+    padding: 15px;
+    margin: 5px 0 22px 0;
+    border: none;
+    background: #f1f1f1;
+  }
+
+  /* When the inputs get focus, do something */
+  .form-container input[type=text]:focus, .form-container input[type=password]:focus {
+    background-color: #ddd;
+    outline: none;
+  }
+
+  /* Set a style for the submit/login button */
+  .form-container .btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom:10px;
+    opacity: 0.8;
+  }
+
+  /* Add a red background color to the cancel button */
+  .form-container .cancel {
+    background-color: red;
+  }
+
+  .column {
+  float: left;
+  width: 50%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+{box-sizing: border-box;}
+
+/* Button used to open the contact form - fixed at the bottom of the page */
+.open-button {
+  background-color: #555;
+  color: white;
+  padding: 16px 20px;
+  border: none;
+  cursor: pointer;
+  opacity: 0.8;
+  position: fixed;
+  bottom: 23px;
+  right: 28px;
+  width: 280px;
+}
+
+/* The popup form - hidden by default */
+.form-popup {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  right: 15px;
+  border: 3px solid #f1f1f1;
+  z-index: 100;
+  opacity: 1;
+  background-color: #f1f1f1;
+}
+
+/* Add styles to the form container */
+.form-container {
+  max-width: 600px;
+  padding: 10px;
+  background-color: white;
+  opacity: 1;
+}
+
+/* Full-width input fields */
+.form-container input[type=text], .form-container input[type=password] {
+  width: 100%;
+  padding: 15px;
+  margin: 5px 0 22px 0;
+  border: none;
+  background: #f1f1f1;
+}
+
+/* When the inputs get focus, do something */
+.form-container input[type=text]:focus, .form-container input[type=password]:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+/* Set a style for the submit/login button */
+.form-container .btn {
+  background-color: #04AA6D;
+  color: white;
+  padding: 16px 20px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom:10px;
+  opacity: 0.8;
+}
+
+/* Add a red background color to the cancel button */
+.form-container .cancel {
+  background-color: red;
+}
+
+/* Add some hover effects to buttons */
+.form-container .btn:hover, .open-button:hover {
+  opacity: 1;
+}
+
+p {font-size: 20px;}
+div {font-size: 20px;}
+</style>
+</head>
+
+<script language="JavaScript">
+today = new Date();
+
+//Global Variables
+var timings = {
+  current: 0,
+  startTimestamp: 0,
+}
+
+times = []
+userAnswers = []
+holdCurrentAnswers = []
+taskNumber = 0
+sumNumber = 0
+surveyFlag = false
+bypass = false
+summariesHappening = false
+//------------------------------------------------------------------------------
+
+quImages = ["https://drive.google.com/file/d/15HEQhc3cO39dwPYCpI1delWF-eWPAeAk/preview",
+"https://drive.google.com/file/d/17pmR6JEy6KHYrEB0_T2s5olD8p6LEr-c/preview",
+"https://drive.google.com/file/d/1yoUG8bFnqgBoBL5LuWrAWy5rmKMIs9kF/preview",
+"https://drive.google.com/file/d/18cPwqOUMxE0kxjhsJ_ySqek3TXqq7h5X/preview",
+"https://drive.google.com/file/d/1rJi-IcHszvEGmkAZjeXtzpcQ9HFq757J/preview",
+"https://drive.google.com/file/d/1ckV-cu8zp3iXu377jD4xWCmCwp0SSXES/preview",
+"https://drive.google.com/file/d/1USvD9CPB-FDcdY-zuWv6LtZbFt-d-k8b/preview",
+"https://drive.google.com/file/d/181_U2v-ruTHKr37WvmHLz1dmi-jm_bEO/preview",
+"https://drive.google.com/file/d/157jftAx5mJngIezQQ9M9r8lzLloBxW_N/preview",
+"https://drive.google.com/file/d/1Z677GzvNt2RgYapZJYRiwyy_m9T7Z1Ht/preview",
+"https://drive.google.com/file/d/1PCZUYDkIhPXZoMAZqEcjpqGp4E3V8eXK/preview",
+"https://drive.google.com/file/d/16OLFiyGmV-uDInjxdIx9XpAuTwq44EKW/preview"]
+
+quImagesSecondMap = ["https://drive.google.com/file/d/1YjvvB5A3w_SXJDORUzWTqw6Q4Qgjjw-1/preview",
+"https://drive.google.com/file/d/1YjvvB5A3w_SXJDORUzWTqw6Q4Qgjjw-1/preview",
+"https://drive.google.com/file/d/1YjvvB5A3w_SXJDORUzWTqw6Q4Qgjjw-1/preview",
+"https://drive.google.com/file/d/1jt_BtONC2T4OD3CYkCU9ACFZ1S4uY-o4/preview",
+"https://drive.google.com/file/d/1jt_BtONC2T4OD3CYkCU9ACFZ1S4uY-o4/preview",
+"https://drive.google.com/file/d/1jt_BtONC2T4OD3CYkCU9ACFZ1S4uY-o4/preview",
+"https://drive.google.com/file/d/1enRUJ3slZOVXNZIXw_REXFUIqvvJyxU_/preview",
+"https://drive.google.com/file/d/1enRUJ3slZOVXNZIXw_REXFUIqvvJyxU_/preview",
+"https://drive.google.com/file/d/1enRUJ3slZOVXNZIXw_REXFUIqvvJyxU_/preview",
+"https://drive.google.com/file/d/1lKwazE6IciFtLDoDQsNMBC3aNQ8Q2FIB/preview",
+"https://drive.google.com/file/d/1lKwazE6IciFtLDoDQsNMBC3aNQ8Q2FIB/preview",
+"https://drive.google.com/file/d/1lKwazE6IciFtLDoDQsNMBC3aNQ8Q2FIB/preview"]
+
+
+queryQuestions = ["<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, will robot III succeed in saving victim A in the left map?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, will robot I and robot II succeed in moving obstacle B in <b>map 2</b>?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, what will robot III mostly likely do in the left map?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, will robot I and robot II succeed in moving obstacle F in the left map?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, will robot I and robot III succeed in saving victim B in <b>map 2</b>?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, what will robot III mostly likely do in the left map?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, will robot I succeed in removing obstacle B in the left map?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, will robot II and robot III succeed in saving victim A in <b>map 2</b>?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, what will robot I mostly likely do in the left map?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, will robot III succeed in saving victim B in the left map?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, will robot I remove obstacle F in <b>map 2</b>?",
+"<span style=\"color:red;\">Bonus Question: </span>Based on the above explanation, what will robot III mostly likely do in the left map?"]
+
+//explanations = ["Robot III rescues victim A when one of the following situations occurs:<br/><b>1)</b> robot III is detecting victim A <b>and</b> robot I is detecting victim A, <br/><b>2)</b> robot III is detecting victim A <b>and</b> robot II is detecting victim A.<br/>",
+//"Robot I and robot II do not move obstacle B in <b>map 1</b> because robot I and robot II are not detecting obstacle B.",
+//"When robot III is not detecting victim A, robot III will most likely move.",
+//"Robot I and robot II move obstacle F when: <br/> robot I detects obstacle F <b>and</b> robot II detects obstacle F.",
+//"Robot I and robot III do not rescue victim B in <b>map 1</b> because robot I is not detecting victim B.",
+//"When robot III is detecting victim A, robot III will most likely rescue victim.",
+//"Robot I moves obstacle B when one of the following situations occurs:<br/><b>1)</b> robot I is not detecting fire C <b>and</b> robot II is not detecting fire C <b>and</b> robot III is not detecting Fire C <b>and</b> robot I is detecting obstacle B, <br/><b>2)</b> robot III is not detecting victim A <b>and</b> robot I is not detecting fire C <b>and</b> robot I is detecting obstacle B <b>and</b> robot III  is not detecting obstacle B, <br/><b>3)</b> robot I is not detecting fire C <b>and</b> //robot III is not detecting fire C <b>and</b> robot I is detecting obstacle B <b>and</b> robot II is detecting obstacle B,<br/><b>4)</b> robot III is detecting fire C <b>and</b> robot II is not detecting obstacle B.<br/>",
+//"Robot II and robot III do not rescue victim A in <b>map 1</b> because robot I is detecting obstacle B.",
+//"When robot I is detecting obstacle B, robot I will wait, move, remove obstacle, <b>or</b> fight fire.",
+//"Robot III  rescues a victim when one of the following situations occurs: <br/><b>1)</b> robot II is detecting the victim A <b>and</b> robot III is detecting the victim A <br/><b>2)</b> robot III is detecting the victim A <b>and</b> robot II is detecting the victim B <b>and</b> robot I is not detecting the Fire C<br/><b>3)</b> robot I is detecting the victim B <b>and</b> robot III is detecting the victim B <br/><b>4)</b> robot II is detecting the victim B <b>and</b> robot III is detecting the victim B <br/><b>5)</b> robot III is detecting the victim A <b>and</b> robot I is detecting the victim B <br/><b>6)</b> robot I is detecting the victim A <b>and</b> robot III is detecting the victim A <b>and</b> robot II is not detecting the Fire C.",
+//"Robot I does not remove obstacle F in <b>map 1</b> because robot I is detecting fire D <b>and</b> robot III is detecting obstacle F.",
+//"When robot III is detecting obstacle F, robot III will wait,	move, <b>or</b> remove obstacle."] //Us First
+
+explanations = ["Robot III rescues victim A when one of the following situations occurs: <br/><b>1)</b> robot III is detecting victim A <b>and</b> robot II is not detecting fire C, <br/><b>2)</b> robot III is detecting victim A <b>and</b> robot II is not detecting obstacle B. <br/>",
+"Robot I and robot II do not move obstacle B in <b>map 1</b> because robot II is not detecting obstacle B.",
+"When robot III is not detecting victim A, robot III 	will wait, move, remove obstacle, <b>or</b> fight fire.",
+"Robot I and robot III move obstacle F when one of the following situations occurs: <br/> <b>1)</b> robot III is not detecting the Fire C <b>and</b> robot I is not detecting the Fire D <b>and</b> robot II is not detecting the Fire D <b>and</b> robot I is not detecting the obstacle E <b>and</b> robot I is detecting the obstacle F <b>and</b> robot II is detecting the obstacle F.",
+"Robot I and robot III do not rescue victim B in <b>map 1</b> because  robot I is not detecting the victim B <b>and</b> robot II is not detecting the victim B <b>and</b> robot III is detecting the victim B <b>and</b> robot II is not detecting the Fire D <b>and</b> robot II is not detecting the Fire C.",
+"When robot III is detecting victim A, robot III will wait, move, <b>or</b> rescue victim.",
+"Robot I moves obstacle B when one of the following situations occurs: <br/> <b>1)</b> robot I is detecting obstacle B <b>and</b> robot II is detecting obstacle B.<br/>",
+"Robot II and robot III do not rescue victim A in <b>map 1</b> because robot II is not detecting victim A.",
+"When robot I is detecting obstacle B, robot I will most likely remove obstacle.",
+"Robot III rescues victim B when one of the following situations occurs:<br/><b>1)</b>robot III is detecting victim B <b>and</b> robot II is detecting victim B <br/><b>2)</b>robot III is detecting victim B <b>and</b> robot I is detecting victim B.",
+"Robot I does not remove obstacle F in <b>map 1</b> because robot I is not detecting obstacle F <b>and</b> robot II is not detecting obstacle F.",
+"When robot III is detecting obstacle F, robot III will most likely move."] //Base First
+
+summaryQuestions = ["Based on the policy summary shown in the left, <b>which robots are required to rescue victim A?</b>",
+"Based on the policy summary shown in the left, <b>which robots are required to remove obstacle E?</b>",
+"Based on the policy summary shown in the left, <b>which robots are required to remove obstacle B?</b>",
+"Based on the policy summary shown in the left, <b>which robots are required to rescue victim B?</b>"]
+
+summaries = ["https://drive.google.com/file/d/1074PJ1bs-jBFKTO4IWY4nthRKPkM_puA/preview",
+"https://drive.google.com/file/d/1v9GfKdpZKBJ8MJPN2YQ-fyDC7KBUYyew/preview",
+"https://drive.google.com/file/d/17vLCzULNOJQmBAW87P-CwfrWra_sWgoe/preview",
+"https://drive.google.com/file/d/1eTF4s-zTjHJk2TYFq5W49gZxxP7Sriod/preview"] //Ours First
+
+//summaries = ["https://drive.google.com/file/d/17vLCzULNOJQmBAW87P-CwfrWra_sWgoe/preview",
+//"https://drive.google.com/file/d/1eTF4s-zTjHJk2TYFq5W49gZxxP7Sriod/preview",
+//"https://drive.google.com/file/d/1074PJ1bs-jBFKTO4IWY4nthRKPkM_puA/preview",
+//"https://drive.google.com/file/d/1v9GfKdpZKBJ8MJPN2YQ-fyDC7KBUYyew/preview"] //Base First
+
+//---------------
+
+function renderImage(imgURL) {
+  qform = document.forms[0]
+  qform.reset()
+}
+
+function consent(){
+    document.getElementById('Instruction').style.visibility = "hidden"
+    document.getElementById('Instruction').style.height = 0
+    document.getElementById('ConsentForm').style.visibility = "visible"
+}
+
+function phase1function(){
+  document.getElementById('ConsentForm').style.visibility = "hidden"
+  document.getElementById('ConsentForm').style.height = 0
+  document.getElementById('Phase1').style.visibility = "visible"
+  window.scroll(0,0)
+}
+
+function continuePhase2(){
+  window.scroll(0,0)
+  if ((document.getElementById("Age1").checked == true || document.getElementById("Age2").checked == true || document.getElementById("Age3").checked == true || document.getElementById("Age4").checked == true || document.getElementById("Age5").checked == true || document.getElementById("Age6").checked == true) &&
+  (document.getElementById("sr1").checked == true || document.getElementById("sr2").checked == true || document.getElementById("sr3").checked == true || document.getElementById("sr4").checked == true) &&
+  (document.getElementById("Gender1").checked == true || document.getElementById("Gender2").checked == true || document.getElementById("Gender3").checked == true || document.getElementById("Gender4").checked == true)){
+
+    qform = document.getElementById("questions-form")
+
+    document.getElementById('Phase1').style.visibility = "hidden"
+    document.getElementById('Phase1').style.height = 0
+    document.getElementById('DemoInfo').style.visibility = "visible"
+
+    if (document.getElementById("Age1").checked){ageNumber=1}
+    if (document.getElementById("Age2").checked){ageNumber=2}
+    if (document.getElementById("Age3").checked){ageNumber=3}
+    if (document.getElementById("Age4").checked){ageNumber=4}
+    if (document.getElementById("Age5").checked){ageNumber=5}
+    if (document.getElementById("Age6").checked){ageNumber=6}
+
+    if (document.getElementById("sr1").checked){srNumber=1}
+    if (document.getElementById("sr2").checked){srNumber=2}
+    if (document.getElementById("sr3").checked){srNumber=3}
+    if (document.getElementById("sr4").checked){srNumber=4}
+
+    if (document.getElementById("Gender1").checked){genderNumber=1}
+    if (document.getElementById("Gender2").checked){genderNumber=2}
+    if (document.getElementById("Gender3").checked){genderNumber=3}
+    if (document.getElementById("Gender4").checked){genderNumber=4}
+
+    userAnswers.push("Age:" + ageNumber)
+    userAnswers.push("Gender:" + genderNumber)
+    userAnswers.push("S&R:" + srNumber)
+
+  }
+  else {
+    window.alert("Please Answer All Questions.")
+  }
+}
+
+function continueDemo(){
+  window.scroll(0,0)
+  document.getElementById('DemoInfo').style.visibility = "hidden"
+  document.getElementById('DemoInfo').style.height = 0
+  document.getElementById('mapIframeIcon1').style.height = 0
+  document.getElementById('mapIframeIcon2').style.height = 0
+  document.getElementById('mapIframeIcon3').style.height = 0
+  document.getElementById('mapIframeIcon4').style.height = 0
+  document.getElementById('mapIframeIcon6').style.height = 0
+  document.getElementById("DemoInfo").style.display= "none"
+  //document.getElementById('rowIcon').style.visibility = "hidden"
+  //document.getElementById('col1Icon').style.visibility = "hidden"
+  //document.getElementById('col2Icon').style.visibility = "hidden"
+  document.getElementById("Demo1Info").style.visibility="visible"
+  document.getElementById("Demo1Info").style.display= "block"
+}
+
+function startTask(){
+  window.scroll(0,0)
+  qform = document.getElementById("questions-form")
+  if(taskNumber == 0){
+    attCheck = qform["demo0"].value != "2" || qform["demo1"].value != "1" || qform["demo2"].value != "1" || qform["demo3"].value != "2"
+    if(attCheck == true){
+      window.alert("Please Answer All Questions Correctly.")
+      return
+    }
+  }
+
+  if(taskNumber != 0 && bypass == false){
+    if(qform["trialChoiceWhat"].value == "" && qform["trialChoiceWhenWhyNot"].value == ""){
+      window.alert("Please Answer All Questions.")
+      return
+    }
+  }
+
+  bypass = false
+  console.log("New Task")
+  console.log(taskNumber)
+
+  if(!(userAnswers.includes("Ques"+taskNumber+";" + qform["trialChoiceWhat"].value))){
+    if(qform["trialChoiceWhat"].value != ""){
+      userAnswers.push("Ques"+taskNumber+";" + qform["trialChoiceWhat"].value)
+      holdCurrentAnswers.push(parseInt(qform["trialChoiceWhat"].value))
+    }
+  }
+
+  if(!(userAnswers.includes("Ques"+taskNumber+";" + qform["trialChoiceWhenWhyNot"].value))){
+    if(qform["trialChoiceWhenWhyNot"].value != ""){
+      userAnswers.push("Ques"+taskNumber+";" + qform["trialChoiceWhenWhyNot"].value)
+      holdCurrentAnswers.push(parseInt(qform["trialChoiceWhenWhyNot"].value))
+    }
+  }
+
+  if(taskNumber == 0 || taskNumber == 1 || taskNumber == 2 || taskNumber == 3 || taskNumber == 4 || taskNumber == 5){
+    document.getElementById("sessionId").innerHTML = "Session 1"
+  }
+  if(taskNumber == 6 || taskNumber == 7 || taskNumber == 8 || taskNumber == 9 || taskNumber == 10 || taskNumber == 11){
+    document.getElementById("sessionId").innerHTML = "Session 2"
+  }
+
+  if(taskNumber == 0){
+    document.getElementById("sessionIdSurvey").innerHTML = "session 1"
+  }
+  if(taskNumber == 7){
+    document.getElementById("sessionIdSurvey").innerHTML = "session 2"
+  }
+
+  document.getElementById("trialExplanation").innerHTML = explanations[taskNumber]
+  document.getElementById("trialQuestionWhenWhyNot").innerHTML = queryQuestions[taskNumber]
+  document.getElementById("trialQuestionWhat").innerHTML = queryQuestions[taskNumber]
+  document.getElementById("mapIframeTrial").src = quImages[taskNumber]
+  document.getElementById("mapIframeTrialSecondMap").src = quImagesSecondMap[taskNumber]
+
+
+  document.getElementById('Demo1Info').style.visibility = "hidden"
+  document.getElementById('Demo1Info').style.height = 0
+  document.getElementById("Demo1Info").style.display= "none"
+  document.getElementById("trialPage").style.visibility="visible"
+
+  if((taskNumber == 6 || taskNumber == 12) && surveyFlag == false){
+    if(qform["sat1"].value == "" || qform["sat2"].value == "" || qform["sat3"].value == "" || qform["sat4"].value == "" || qform["sat5"].value == "" || qform["sat6"].value == "" || qform["sat7"].value == ""){
+      window.alert("Please answer all questions.")
+      bypass = true
+      return
+    }
+    else{
+      userAnswers.push("Good1;" + qform["sat1"].value)
+      userAnswers.push("Good2;" + qform["sat2"].value)
+      userAnswers.push("Good3;" + qform["sat3"].value)
+      userAnswers.push("Good4;" + qform["sat4"].value)
+      userAnswers.push("Good5;" + qform["sat5"].value)
+      userAnswers.push("Good6;" + qform["sat6"].value)
+      userAnswers.push("Good7;" + qform["sat7"].value)
+    }
+  }
+
+  if(taskNumber == 1 || taskNumber == 4 || taskNumber == 7 || taskNumber == 10){
+    document.getElementById("mapIframeTrial").style.display= "block"
+    document.getElementById("mapIframeTrialSecondMap").style.display= "block"
+    //document.getElementById("mapIframeTrial").style.height = "300px"
+    //document.getElementById("mapIframeTrial").style.width = "300px"
+    //document.getElementById("mapIframeTrialSecondMap").style.height = "300px"
+    //document.getElementById("mapIframeTrialSecondMap").style.width = "300px"
+    if(taskNumber == 0 || taskNumber == 1 || taskNumber == 2 || taskNumber == 6 || taskNumber == 7 || taskNumber == 8){
+      document.getElementById("mapIframeTrial").style.height = "260px"
+      document.getElementById("mapIframeTrial").style.width = "450px"
+      document.getElementById("mapIframeTrialSecondMap").style.height = "260px"
+      document.getElementById("mapIframeTrialSecondMap").style.width = "450px"
+    }
+    if(taskNumber == 3 || taskNumber == 4 || taskNumber == 5 || taskNumber == 9 || taskNumber == 10 || taskNumber == 11){
+      document.getElementById("mapIframeTrial").style.height = "300px"
+      document.getElementById("mapIframeTrial").style.width = "280px"
+      document.getElementById("mapIframeTrialSecondMap").style.height = "300px"
+      document.getElementById("mapIframeTrialSecondMap").style.width = "280px"
+    }
+  }
+  else{
+    document.getElementById("mapIframeTrialSecondMap").style.display= "none"
+    if(taskNumber == 0 || taskNumber == 1 || taskNumber == 2 || taskNumber == 6 || taskNumber == 7 || taskNumber == 8){
+      document.getElementById("mapIframeTrial").style.height = "260px"
+      document.getElementById("mapIframeTrial").style.width = "510px"
+    }
+    if(taskNumber == 3 || taskNumber == 4 || taskNumber == 5 || taskNumber == 9 || taskNumber == 10 || taskNumber == 11){
+      document.getElementById("mapIframeTrial").style.height = "500px"
+      document.getElementById("mapIframeTrial").style.width = "500px"
+    }
+  }
+
+  if(surveyFlag == true){
+    document.getElementById('trialPage').style.visibility = "hidden"
+    document.getElementById('trialPage').style.height = 0
+    document.getElementById("satisfactionQs").style.visibility="visible"
+    document.getElementById("satisfactionQs").style.display= "block"
+    document.getElementById("trialPage").style.display= "none"
+    document.getElementById('NasaTLX').style.visibility = "hidden"
+    document.getElementById('NasaTLX').style.height = 0
+    document.getElementById("NasaTLX").style.display= "none"
+    bypass = true
+    surveyFlag = false
+    return
+  }
+  else if(taskNumber == 2 || taskNumber == 5 || taskNumber == 8 || taskNumber == 11){
+    document.getElementById('trialQuestionsWhenWhyNot').style.visibility = "hidden"
+    document.getElementById('trialQuestionsWhenWhyNot').style.height = 0
+    document.getElementById("trialQuestionsWhenWhyNot").style.display= "none"
+    document.getElementById("trialQuestionsWhat").style.display= "block"
+    document.getElementById('trialQuestionWhat').style.display = "block"
+    document.getElementById('trialExplanation').style.display = "block"
+    document.getElementById("trialQuestionsWhat").style.visibility = "visible"
+    document.getElementById('trialQuestionWhat').style.visibility = "visible"
+    document.getElementById('trialExplanation').style.visibility = "visible"
+    if(taskNumber == 5 || taskNumber == 11){
+      surveyFlag = true
+    }
+    taskNumber = taskNumber + 1
+  }
+  else{
+    document.getElementById("trialPage").style.visibility="visible"
+    document.getElementById('trialPage').style.display = "block"
+    document.getElementById('satisfactionQs').style.visibility = "hidden"
+    document.getElementById('satisfactionQs').style.height = 0
+    document.getElementById("satisfactionQs").style.display= "none"
+    document.getElementById('trialQuestionsWhat').style.visibility = "hidden"
+    document.getElementById('trialQuestionsWhat').style.height = 0
+    document.getElementById("trialQuestionsWhat").style.display= "none"
+    document.getElementById('trialQuestionWhenWhyNot').style.display = "block"
+    document.getElementById('trialQuestionsWhenWhyNot').style.display = "block"
+    document.getElementById('trialQuestionsWhenWhyNot').style.visibility = "visible"
+    document.getElementById('trialQuestionWhenWhyNot').style.visibility = "visible"
+    document.getElementById('trialExplanation').style.visibility = "visible"
+    document.getElementById('trialExplanation').style.display = "block"
+    taskNumber = taskNumber + 1
+  }
+
+  console.log(surveyFlag)
+  if(taskNumber == 13 && surveyFlag == false){
+    console.log("Finish Queries")
+    console.log(userAnswers)
+    document.getElementById('trialPage').style.visibility = "hidden"
+    document.getElementById('trialPage').style.height = 0
+    document.getElementById("trialPage").style.display= "none"
+    document.getElementById('satisfactionQs').style.visibility = "hidden"
+    document.getElementById('satisfactionQs').style.height = 0
+    document.getElementById("satisfactionQs").style.display= "none"
+    document.getElementById('sumPage').style.visibility = "hidden"
+    document.getElementById('sumPage').style.height = 0
+    document.getElementById("sumPage").style.display= "none"
+    finishsection();
+    return
+  }
+
+  qform.reset()
+}
+
+function satisfactionSurvey(){
+  console.log("satisfactionSurvey")
+  qform = document.getElementById("questions-form")
+  if (qform["tlx1"].value != "" && qform["tlx2"].value != "" && qform["tlx3"].value != "" && qform["tlx4"].value != ""&& qform["tlx5"].value != ""&& qform["tlx6"].value != ""){
+
+  userAnswers.push("TLX1;" + qform["tlx1"].value)
+  userAnswers.push("TLX2;" + qform["tlx2"].value)
+  userAnswers.push("TLX3;" + qform["tlx3"].value)
+  userAnswers.push("TLX4;" + qform["tlx4"].value)
+  userAnswers.push("TLX5;" + qform["tlx5"].value)
+  userAnswers.push("TLX6;" + qform["tlx6"].value)
+
+  document.getElementById("DemoSummary1").style.visibility="hidden"
+  document.getElementById("DemoSummary1").style.display= "none"
+  document.getElementById("NasaTLX").style.visibility= "hidden"
+  document.getElementById("NasaTLX").style.display= "none"
+  document.getElementById("satisfactionQs").style.display="block"
+  document.getElementById("satisfactionQs").style.visibility= "visible"
+
+  if(summariesHappening == true){
+    document.getElementById("querButton").style.visibility= "hidden"
+    document.getElementById("querButton").style.display= "none"
+    document.getElementById("sumButton").style.display="block"
+    document.getElementById("sumButton").style.visibility= "visible"
+  }
+  else{
+    document.getElementById("sumButton").style.visibility= "hidden"
+    document.getElementById("sumButton").style.display= "none"
+    document.getElementById("querButton").style.display="block"
+    document.getElementById("querButton").style.visibility= "visible"
+  }
+  bypass = true
+  surveyFlag = false
+  }
+  else{
+    window.alert("Please answer all questions.")
+  }
+}
+
+function openForm() {
+  document.getElementById("myForm").style.display = "block";
+}
+
+function closeForm() {
+  document.getElementById("myForm").style.display = "none";
+}
+
+function continueDemoSum(){
+  summariesHappening = true
+  window.scroll(0,0)
+  qform = document.getElementById("questions-form")
+  if(qform["sum0"].value != "2" || qform["sum1"].value != "3"){
+      window.alert("Please Answer All Questions Correctly.")
+      return
+    }
+    document.getElementById('DemoSummary1').style.visibility = "hidden"
+    document.getElementById('DemoSummary1').style.height = 0
+    document.getElementById("DemoSummary1").style.display= "none"
+    document.getElementById('DemoSummary2').style.visibility = "visible"
+    document.getElementById("DemoSummary2").style.display= "block"
+    qform.reset()
+}
+
+function startSummary(){
+  window.scroll(0,0)
+  if(sumNumber == 0){
+  if(qform["sum2"].value != "1" || qform["sum3"].value != "1"){
+      window.alert("Please Answer All Questions Correctly.")
+      return
+    }
+  }
+
+  if((sumNumber == 2 || sumNumber == 4) && surveyFlag == false){
+    if(qform["sat1"].value == "" || qform["sat2"].value == "" || qform["sat3"].value == "" || qform["sat4"].value == "" || qform["sat5"].value == "" || qform["sat6"].value == "" || qform["sat7"].value == ""){
+      window.alert("Please answer all questions.")
+      bypass = true
+      return
+    }
+    else{
+      userAnswers.push("Good1;" + qform["sat1"].value)
+      userAnswers.push("Good2;" + qform["sat2"].value)
+      userAnswers.push("Good3;" + qform["sat3"].value)
+      userAnswers.push("Good4;" + qform["sat4"].value)
+      userAnswers.push("Good5;" + qform["sat5"].value)
+      userAnswers.push("Good6;" + qform["sat6"].value)
+      userAnswers.push("Good7;" + qform["sat7"].value)
+    }
+  }
+
+  if(sumNumber != 0 && bypass == false){
+    if(qform["sumChoice"].value == ""){
+      window.alert("Please Answer All Questions.")
+      return
+    }
+  }
+  bypass = false
+
+    document.getElementById('DemoSummary2').style.visibility = "hidden"
+    document.getElementById('DemoSummary2').style.height = 0
+    document.getElementById("DemoSummary2").style.display= "none"
+    document.getElementById("sumPage").style.visibility="visible"
+    document.getElementById('sumPage').style.display = "block"
+    document.getElementById('satisfactionQs').style.visibility = "hidden"
+    document.getElementById('satisfactionQs').style.height = 0
+    document.getElementById("satisfactionQs").style.display= "none"
+
+    document.getElementById("sumQuestion").innerHTML = summaryQuestions[sumNumber]
+    document.getElementById("mapIframesum").src = summaries[sumNumber]
+
+    if(!(userAnswers.includes("Sum"+sumNumber+";" + qform["sumChoice"].value) )){
+      if(qform["sumChoice"].value != ""){
+        userAnswers.push("Sum"+sumNumber+";" + qform["sumChoice"].value)
+      }
+    }
+
+    if(surveyFlag == true){
+      document.getElementById('sumPage').style.visibility = "hidden"
+      document.getElementById('sumPage').style.height = 0
+      document.getElementById("satisfactionQs").style.visibility="visible"
+      document.getElementById("satisfactionQs").style.display= "block"
+      document.getElementById("sumPage").style.display= "none"
+      bypass = true
+      surveyFlag = false
+      return
+    }
+    if(sumNumber == 1 || sumNumber == 3){
+      surveyFlag = true
+    }
+    sumNumber = sumNumber + 1
+
+    if(sumNumber == 5 && surveyFlag == false){
+      console.log("Finished Summaries")
+      console.log(userAnswers)
+      document.getElementById('sumPage').style.visibility = "hidden"
+      document.getElementById('sumPage').style.height = 0
+      document.getElementById("sumPage").style.display= "none"
+      finishsection();
+      return
+    }
+
+    qform.reset()
+}
+
+function finishsection(){
+  console.log("FINISH SECTION")
+  document.getElementById("trialPage").style.visibility= "hidden"
+  document.getElementById("trialPage").style.display= "none"
+  document.getElementById("satisfactionQs").style.visibility= "hidden"
+  document.getElementById("satisfactionQs").style.display= "none"
+  document.getElementById("submitbutton").style.display="block"
+  document.getElementById("submitbutton").style.visibility= "visible"
+  document.getElementById("submitbuttondiv").style.display="block"
+  document.getElementById("submitbuttondiv").style.visibility= "visible"
+
+  numberOfCorrectAnswers = 0
+  correctAnswers = [2,2,2,2,1,3,1,1,5,1,2,2]
+
+  for(let i = 0; i < 12; i++){
+    if(holdCurrentAnswers[i] == correctAnswers[i]){
+      numberOfCorrectAnswers = numberOfCorrectAnswers+1
+    }
+  }
+
+  console.log("PRINTING ANSWERS")
+  console.log(userAnswers)
+  console.log(times)
+  console.log(numberOfCorrectAnswers)
+
+  document.getElementById("finalAnswer").value = userAnswers
+  document.getElementById("numCorrect").value = numberOfCorrectAnswers
+  document.getElementById("finalTimes").value = times
+}
+
+
+</script>
+<!-- You must include crowd-form so that your Video submits answers to MTurk -->
+<crowd-form answer-format="flatten-objects" style="height:100">
+
+  <div id="Instruction" style="visibility: visible;  position:relative;padding-left: 1%;top:55;width:90%;z-index:12; height:80px; background: #FDFEFE">
+    <h1>Study Description</h1>
+
+    <div>
+        You will be provided some information about robotic search and rescue missions and asked to answer questions based on the provided information.<br/><br/>
+        You will get a <b>base payment of $1</b> for completing the study and passing all attention check questions.
+        Additionally, you will get a <b>bonus payment of $0.10</b> for each correctly answered bonus question. There are <b>12 bonus questions</b> in total. Therefore, you will <b>receive up to $2.20 for the entire study</b>.<br/>
+        <br/>
+        This study will take about <b> 10 minutes</b>.
+        <br/>
+        Note: Pressing the finish button at any point will end the study, but only completed tasks will receive payment.  <br/>
+      <br/>
+      <br/>
+      <br/>
+    </div>
+    <br/>
+    <br/>
+    <center>
+    <button type="button" onclick="javascript:consent();" style="font-size: 22px" align = "center">Next</button>
+    </center>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+  </div>
+
+  <div id="ConsentForm" style="visibility: hidden;  position:relative;padding-left: 1%;top:55;width:90%;z-index:12; height:80px; background: #FDFEFE">
+    <h1>Informed Consent Agreement</h1>
+    <br/>
+    <b>Study Title:</b> Explainable Multi-Agent Formal Methods for Human-Cyber-Physical Systems
+    <br/><br/>
+    <b>Please read this consent agreement carefully before you decide to participate in the study.</b>
+    <br/><br/>
+    <b>Consent Form Key Information:</b><br/><br/>
+    <ul>
+      <li>Participate in a 5 to 10-minute study about using an explanation to answer questions about a multi-robot mission</li>
+	    <li>Take several surveys regarding how good the presented explanations are</li>
+      <li>Complete a task to gauge your understanding of the presented mission plan</li>
+	    <li>No information collected that will connect identity with responses</li>
+	    <li>There are no anticipated risks</li>
+	    <li>You may withdraw from the study at any time with no penalty</li>
+ 	    <li>You will be compensated through Amazon Mechanical Turk for your time</li>
+    </ul>
+    <br/><br/>
+    <b>Purpose of the research study:</b>The purpose of the study is to better understand the extent to which different types of explanations effects task performance and perceived explanation goodness.
+    <br/><br/>
+    <b>What you will do in the study:</b> Participants will be presented with robotic search and rescue missions and a potential plan to complete that mission. The goal of the mission is to find and do as many tasks as possible in the shortest time. Participants will be asked questions about their understanding of the plan with help from various types of explanations. We will collect the participant’s chosen answers about the mission and their reported perceived explanation goodness. Participants can skip any question that makes them uncomfortable, and they can stop the interview/survey at any time.
+    <br/><br/>
+    <b>Time required:</b> The study will require about 5-10 minutes of your time.
+    <br/><br/>
+    <b>Risks:</b> There are no anticipated risks in this study.
+    <br/><br/>
+    <b>Benefits:</b> There are no direct benefits to you for participating in this research study. The study may help us understand how explanations can be used to increase task performance, increase user satisfaction, and decrease perceived difficulty in multi-agent coordination tasks.
+    <br/><br/>
+    <b>Confidentiality:</b> The data collected is not linked to your identifying information. The information that you give in the study will be handled confidentially. Your name and other information that could be used to identify you will not be collected or linked to the data. Only your Amazon Mechanical Turk Worker ID will be collected. There will be no attempt to identify you and your data will be reported in a way that will not identify you.
+    <br/><br/>
+    <b>Voluntary participation:</b> Your participation in the study is completely voluntary.
+    <br/><br/>
+    <b>Right to withdraw from the study:</b> You have the right to withdraw from the study at any time without penalty.
+    <br/><br/>
+    <b>How to withdraw from the study:</b> Users may withdraw from the study at any time by closing the window containing the study. Users may withdraw from the study after completing it by contacting us through Amazon Mechanical Turk and request to be withdrawn. There is no penalty for withdrawing. You will still receive full payment for the study.
+    <br/><br/>
+    <b>Payment:</b> You will receive payment for participating in the study. This payment will be provided through Amazon Mechanical Turk once the study has been completed and approved. You will get a base payment of $1 for completing the study and passing all attention check questions. Additionally, you will get an additional payment of $0.10 for each correctly answered bonus question.
+    <br/><br/>
+    <b>Using data beyond this study:</b> This data will be used to understand how explanations can be used to better performance, satisfaction, and burden in multi-agent collaboration tasks. This data may be provided to other researchers. However, we will remove any identifying information (such as your name, contact information, etc.) connected to the information you provide. We will share all the information collected in this study (not just your individual file) with other researchers for future research studies, including but not limited to those further integrating explanations into route planning applications to produce more satisfying routes.<br/>
+    The researcher will not make the information available on a public website. The other researcher will not have access to your name and other information that could potentially identify you nor will they attempt to identify you.
+    <br/><br/>
+    <b>If you have questions about the study, contact:</b><br/>
+    Kayla Boggess<br/>
+    Ph.D. Student<br/>
+    Department of Computer Science<br/>
+    University of Virginia, Charlottesville, VA 22903.<br/>
+    Email address: kjb5we@virginia.edu<br/>
+    <br/>
+    Dr. Lu Feng<br/>
+    Assistant Professor<br/>
+    Department of Computer Science<br/>
+    Department of Engineering Systems and the Environment<br/>
+    University of Virginia, Charlottesville, VA 22903.  <br/>
+    Email address: lu.feng@virginia.edu<br/>
+    <br/>
+    <b>To obtain more information about the study, ask questions about the research procedures, express concerns about your participation, or report illness, injury or other problems, please contact:</b><br/>
+    Tonya R. Moon, Ph.D.<br/>
+    Chair, Institutional Review Board for the Social and Behavioral Sciences<br/>
+    One Morton Dr Suite 500<br/>
+    University of Virginia, P.O. Box 800392<br/>
+    Charlottesville, VA 22908-0392<br/>
+    Telephone:  (434) 924-5999<br/>
+    Email: irbsbshelp@virginia.edu<br/>
+    Website: https://research.virginia.edu/irb-sbs<br/>
+    Website for Research Participants: https://research.virginia.edu/research-participants<br/>
+    <br/>
+    <b>Agreement:</b> I agree to participate in the research study described above.<br/>
+    <br/>
+    <b>Signature:</b> Selecting “I agree” will be sufficient as your consenting signature.<br/>
+    <br/>
+    If you need a copy of this consent form, you may print a copy of this page for your records.
+    <br/><br/>
+    <br/><br/>
+      <button type="button" onclick="javascript:phase1function();" style="font-size: 22px" align = "center">I Agree</button>
+      <br/><br/>
+      <br/><br/>
+  </div>
+
+  <form name="questions-form" id="questions-form" class="formQ" style="height: 0px" required>
+
+  <div id="Phase1" style="visibility: hidden;  position:relative;padding-left: 1%;top:55;width:90%;z-index:12; height:80px; background: #FDFEFE">
+    <h1>Background Questions</h1>
+    <div>
+      <h4>1. What is your age? </h4>
+      <crowd-radio-group >
+        <crowd-radio-button name="1" id="Age1"> 18-24</crowd-radio-button>
+        <crowd-radio-button name="2" id="Age2"> 25-34</crowd-radio-button>
+        <crowd-radio-button name="3" id="Age3"> 35-49</crowd-radio-button>
+        <crowd-radio-button name="4" id="Age4"> 50-64</crowd-radio-button>
+        <crowd-radio-button name="5" id="Age5"> 65+</crowd-radio-button>
+        <crowd-radio-button name="6" id="Age6"> Prefer Not to Respond</crowd-radio-button>
+      </crowd-radio-group>
+    </div>
+
+    <div>
+      <h4>2. What is your gender?</h4>
+      <crowd-radio-group >
+        <crowd-radio-button name="1" id="Gender1"> Male</crowd-radio-button>
+        <crowd-radio-button name="2" id="Gender2"> Female</crowd-radio-button>
+        <crowd-radio-button name="3" id="Gender3"> Non-binary</crowd-radio-button>
+        <crowd-radio-button name="4" id="Gender4"> Prefer Not to Respond</crowd-radio-button>
+      </crowd-radio-group>
+    </div>
+
+    <div>
+    <h4>3. How familiar are you with robotic search and rescue missions?</h4>
+    <crowd-radio-group >
+      <crowd-radio-button name="1" id="sr1"> Not familiar</crowd-radio-button>
+      <crowd-radio-button name="2" id="sr2"> Somewhat familiar</crowd-radio-button>
+      <crowd-radio-button name="3" id="sr3"> Familiar</crowd-radio-button>
+      <crowd-radio-button name="4" id="sr4"> Very familiar</crowd-radio-button>
+    </crowd-radio-group>
+    </div>
+    <br/>
+    <br/>
+    <button type="button" onclick="javascript:continuePhase2();" style="font-size: 22px" align = "right">Submit</button>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+  </div>
+
+  <div  id="DemoInfo" style="padding-left:3%; margin:0px; border:0px solid green visibility: hidden;" class="demo">
+    <h1>Demonstration</h1>
+    <p>When looking at a mission map. The following icons have the meanings shown below.</p>
+    <div id="rowIcon">
+    <iframe id="mapIframeIcon4" src="https://drive.google.com/file/d/1C2JqK5AkX_Hap4c9tSBzzaMXtpGpaxMi/preview" width="50" height="50"></iframe>
+    Robot  &emsp;&emsp;&emsp;&emsp;
+    <iframe id="mapIframeIcon1" src="https://drive.google.com/file/d/1wusBP5DULOhsB-pGubYYsFCLJ5uPNOkw/preview" width="35" height="50">Fire</iframe>
+    Fire  &emsp;&emsp;&emsp;&emsp;
+    <iframe id="mapIframeIcon2" src="https://drive.google.com/file/d/13J5N_ABsTQQ1kIKK2hkSuMlCmWLvU8DG/preview" width="50" height="40"></iframe>
+    Obstacle  &emsp;&emsp;&emsp;&emsp;
+    <iframe id="mapIframeIcon3" src="https://drive.google.com/file/d/1gupCHx7SWMzaGlD-b4T4Q-9G7A9aCHBR/preview" width="50" height="35"></iframe>
+    Victim &emsp;&emsp;&emsp;&emsp;
+    </div>
+    <hr>
+    <h2>Detecting Tasks</h2>
+    <iframe id="mapIframeIcon6" src="https://drive.google.com/file/d/1-uC-U6E_RQIwJ3s8MQqQAp7nZJLfuYnY/preview" width="100" height="100"></iframe>
+    <p>A robot can only detect and complete a task (i.e.,fire, obstacle, victim) when it is in a neighboring grid - one of four star locations in the above map.</p>
+      <br/>
+      <br/>
+    <button type="button" onclick="javascript:continueDemo();" style="font-size: 22px" align = "left">Continue</button>
+  <br/>
+  <br/>
+  <br/>
+  <br/>
+  </div>
+
+  <div id="Demo1Info" class="demo" style="visibility: hidden;">
+  <div class="videoPlay" >
+      <p id="mapDes" class="leftPadding">
+      </p>
+      <center>
+    <iframe id="mapIframe" src="https://drive.google.com/file/d/1nsRGpycRP3dk6ycIoOJ1OHx3R3uDDpVj/preview" width="300" height="300"></iframe>
+    <br/>
+    <p>If the image does not load, <br/>
+      then click "pop-out" in upper right hand corner <br/>
+      to load image in new window.</p>
+      </center>
+  </div>
+
+  <div  id="Demo2Info" style="padding-right:1%; margin:0px; border:0px solid green " class="questions" style="visibility: hidden;">
+    <h1>Demonstration</h1>
+    <h3>Instructions</h3>
+    <ul>
+      <li>The robots start on the green square.</li>
+      <li>Robots are unable to move through or remove red walls.</li>
+      <li>Robots are named using numbers (i.e robot II) and tasks are named using letters (i.e fire A).</li></ul>
+    <b><h3>Questions</h3></b>
+    1. Where is robot II?<br/>
+    <input type="radio" name="demo0"  value="1" style="width:20px;height:20px" > On the top of the map <br/>
+    <input type="radio" name="demo0" value="2" style="width:20px;height:20px"> On the green start space <br/>
+    <input type="radio" name="demo0"  value="3" style="width:20px;height:20px" > On the left side of the map <br/>
+    <br/>
+    2. Where is the fire happening?<br/>
+    <input type="radio" name="demo1"  value="1" style="width:20px;height:20px" > Bottom Right <br/>
+    <input type="radio" name="demo1" value="2" style="width:20px;height:20px"> Top Middle <br/>
+    <input type="radio" name="demo1"  value="3" style="width:20px;height:20px" > Middle Left <br/>
+    <br/>
+    3. Is robot II detecting the fire?<br/>
+    <input type="radio" name="demo2"  value="1" style="width:20px;height:20px" > Yes <br/>
+    <input type="radio" name="demo2" value="2" style="width:20px;height:20px"> No <br/>
+    <br/>
+    4. Is robot I detecting the obstacle?<br/>
+    <input type="radio" name="demo3"  value="1" style="width:20px;height:20px" > Yes <br/>
+    <input type="radio" name="demo3" value="2" style="width:20px;height:20px"> No <br/>
+    <br/>
+    <button type="button" onclick="javascript:startTask();" style="font-size: 22px" align = "center">Submit</button>
+  </div>
+</div>
+
+
+  <div id="trialPage" class="container" style="visibility: hidden; ">
+    <div id="mycanvas" style="position:relative;left:0;top:20; padding-top: 0px; margin:0px; z-index:12">
+      <div id="game-time" class="counter-text">00:00</div>
+      <div id="myimage" style="float:left;border:0px solid red"></div>
+
+  <div class="videoPlay" >
+    <center>
+      </center>
+      <p id="mapDes" class="leftPadding">
+      </p>
+      <center>
+    <iframe id="mapIframeTrial" src="https://drive.google.com/file/d/1vbVeHaiEsmDvmpdkCOTz6jg8ii2A82Pp/preview" width="500" height="500"></iframe>
+    <br/>
+    <iframe id="mapIframeTrialSecondMap" src="https://drive.google.com/file/d/1vbVeHaiEsmDvmpdkCOTz6jg8ii2A82Pp/preview" width="500" height="250"></iframe>
+    <br/>
+      </center>
+  </div>
+
+  <div class="questions" >
+  <p style="font-size: 32px;margin: 0px 30px 20px -30px;" id="sessionId"></p>
+  <p style="line-height:2;margin: 0px 30px 0px -30px;" id="trialExplanation"></p>
+  <div  id="trialQuestionsWhenWhyNot" style="padding-right:0%; margin: 0px 30px 0px -30px; border:0px solid green ">
+    <br/>
+        <span id="trialQuestionWhat"></span> <br/>
+      <input type="radio" name="trialChoiceWhenWhyNot"  value="1" style="width:20px;height:20px"><span id ="trialOption1">yes</span> <br/>
+      <input type="radio" name="trialChoiceWhenWhyNot" value="2" style="width:20px;height:20px"><span id ="trialOption2">no</span> <br/>
+    <!---<input type="radio" name="trialChoiceWhenWhyNot" value="3" style="width:20px;height:20px"><span id ="trialOption3">I don't know.</span> <br/>-->
+    <br/>
+    <br/>
+      <button type="button" onclick="javascript:startTask();" style="font-size: 22px" align = "center">Submit</button>
+  </div>
+
+  <div  id="trialQuestionsWhat" style="padding-right:0%; margin: 0px 30px 0px -30px; border:0px solid green ">
+    <br/>
+      <span id="trialQuestionWhenWhyNot"></span> <br/>
+      <input type="radio" name="trialChoiceWhat"  value="1" style="width:20px;height:20px"><span id ="trialOption1">wait</span> <br/>
+      <input type="radio" name="trialChoiceWhat" value="2" style="width:20px;height:20px"><span id ="trialOption2">move</span> <br/>
+      <input type="radio" name="trialChoiceWhat"  value="3" style="width:20px;height:20px"><span id ="trialOption1">rescue victim</span> <br/>
+      <input type="radio" name="trialChoiceWhat" value="4" style="width:20px;height:20px"><span id ="trialOption2">fight fire</span> <br/>
+      <input type="radio" name="trialChoiceWhat"  value="5" style="width:20px;height:20px"><span id ="trialOption1">remove obstacle</span> <br/>
+    <!---<input type="radio" name="trialChoiceWhat" value="6" style="width:20px;height:20px"><span id ="trialOption3">I don't know.</span> <br/>-->
+    <br/>
+    <br/>
+      <button type="button" onclick="javascript:startTask();" style="font-size: 22px" align = "center">Submit</button>
+  </div>
+  </div>
+
+  <br/><br/>
+  <br/><br/>
+  <br/><br/>
+  </div>
+  </div>
+
+  <div id="sumPage" class="container" style="visibility: hidden; ">
+    <div id="mycanvas" style="position:relative;left:0;top:20; padding-top: 0px; margin:0px; z-index:12">
+      <div id="game-time" class="counter-text">00:00</div>
+      <div id="myimage" style="float:left;border:0px solid red"></div>
+
+  <div class="videoPlay" >
+    <center>
+      </center>
+      <p id="mapDes" class="leftPadding">
+      </p>
+      <center>
+        <br/>
+        <br/>
+        <br/>
+    <iframe id="mapIframesum" src="https://drive.google.com/file/d/16Dtf9j4dsWd5KqUi0F9mT-flb-Vl6-Jv/preview" width="500" height="500"></iframe>
+    <br/>
+      </center>
+  </div>
+
+
+  <div  id="sumQuestionsWhenWhyNot" style="padding-right:0%; margin:0px; border:0px solid green " class="questions">
+    <br/>
+        <span id="sumQuestion"></span> <br/>
+      <input type="radio" name="sumChoice"  value="1" style="width:20px;height:20px"><span id ="trialOption1">robot I</span> <br/>
+      <input type="radio" name="sumChoice" value="2" style="width:20px;height:20px"><span id ="trialOption2">robot II</span> <br/>
+      <input type="radio" name="sumChoice"  value="3" style="width:20px;height:20px"><span id ="trialOption1">robot III</span> <br/>
+      <input type="radio" name="sumChoice" value="4" style="width:20px;height:20px"><span id ="trialOption2">robot I and robot II</span> <br/>
+      <input type="radio" name="sumChoice"  value="5" style="width:20px;height:20px"><span id ="trialOption1">robot I and robot III</span> <br/>
+      <input type="radio" name="sumChoice" value="6" style="width:20px;height:20px"><span id ="trialOption2">robot II and robot III</span> <br/>
+      <input type="radio" name="sumChoice"  value="7" style="width:20px;height:20px"><span id ="trialOption1">robot I and robot II and robot III</span> <br/>
+      <!---<input type="radio" name="sumChoice" value="8" style="width:20px;height:20px"><span id ="trialOption3">I don't know.</span> <br/>-->
+    <br/>
+    <br/>
+      <button type="button" onclick="javascript:startSummary();" style="font-size: 22px" align = "center">Submit</button>
+  </div>
+
+  <br/><br/>
+  <br/><br/>
+  <br/><br/>
+  </div>
+  </div>
+
+  <div id="NasaTLX" class="container" style="visibility: hidden; ">
+    <div id="mycanvas" style="position:relative;left:20;top:20; padding-top: 0px; margin:0px; z-index:12">
+      <div id="game-time" class="counter-text">00:00</div>
+      <div id="myimage" style="float:left;border:0px solid red"></div>
+
+  <div  style="padding-right:1%; margin:0px; border:0px solid green ">
+    <p><b>Instructions: Please answer the questions based task you just completed.</b>
+    </p>
+      <hr>
+    <br/>
+      <b>1. How mentally demanding was it determining the correct answer?</b> <br>
+      <input type="radio" name="tlx1"  value="1" style="width:20px;height:20px" > 1 (Very Low)
+      <input type="radio" name="tlx1" value="2" style="width:20px;height:20px"> 2
+      <input type="radio" name="tlx1" value="3" style="width:20px;height:20px"> 3
+      <input type="radio" name="tlx1" value="4" style="width:20px;height:20px"> 4
+      <input type="radio" name="tlx1" value="5" style="width:20px;height:20px"> 5
+      <input type="radio" name="tlx1" value="6" style="width:20px;height:20px"> 6
+      <input type="radio" name="tlx1" value="7" style="width:20px;height:20px"> 7 (Very High)
+      <br/>
+      <br/>
+      <b>2. How physically demanding was it determining the correct answer?</b> <br>
+      <input type="radio" name="tlx2"  value="1" style="width:20px;height:20px" > 1 (Very Low)
+      <input type="radio" name="tlx2" value="2" style="width:20px;height:20px"> 2
+      <input type="radio" name="tlx2" value="3" style="width:20px;height:20px"> 3
+      <input type="radio" name="tlx2" value="4" style="width:20px;height:20px"> 4
+      <input type="radio" name="tlx2" value="5" style="width:20px;height:20px"> 5
+      <input type="radio" name="tlx2" value="6" style="width:20px;height:20px"> 6
+      <input type="radio" name="tlx2" value="7" style="width:20px;height:20px"> 7 (Very High)
+      <br/>
+      <br/>
+      <b>3. How hurried or rushed was the pace of determining the correct answer?</b> <br>
+      <input type="radio" name="tlx3"  value="1" style="width:20px;height:20px" > 1 (Very Low)
+      <input type="radio" name="tlx3" value="2" style="width:20px;height:20px"> 2
+      <input type="radio" name="tlx3" value="3" style="width:20px;height:20px"> 3
+      <input type="radio" name="tlx3" value="4" style="width:20px;height:20px"> 4
+      <input type="radio" name="tlx3" value="5" style="width:20px;height:20px"> 5
+      <input type="radio" name="tlx3" value="6" style="width:20px;height:20px"> 6
+      <input type="radio" name="tlx3" value="7" style="width:20px;height:20px"> 7 (Very High)
+      <br/>
+      <br/>
+      <b>4. How successful were you in determining the correct answer?</b> <br>
+      <input type="radio" name="tlx4"  value="1" style="width:20px;height:20px" > 1 (Very Low)
+      <input type="radio" name="tlx4" value="2" style="width:20px;height:20px"> 2
+      <input type="radio" name="tlx4" value="3" style="width:20px;height:20px"> 3
+      <input type="radio" name="tlx4" value="4" style="width:20px;height:20px"> 4
+      <input type="radio" name="tlx4" value="5" style="width:20px;height:20px"> 5
+      <input type="radio" name="tlx4" value="6" style="width:20px;height:20px"> 6
+      <input type="radio" name="tlx4" value="7" style="width:20px;height:20px"> 7 (Very High)
+      <br/>
+      <br/>
+      <b>5. How hard did you have to work to determine the correct answer?</b> <br>
+      <input type="radio" name="tlx5"  value="1" style="width:20px;height:20px" > 1 (Very Low)
+      <input type="radio" name="tlx5" value="2" style="width:20px;height:20px"> 2
+      <input type="radio" name="tlx5" value="3" style="width:20px;height:20px"> 3
+      <input type="radio" name="tlx5" value="4" style="width:20px;height:20px"> 4
+      <input type="radio" name="tlx5" value="5" style="width:20px;height:20px"> 5
+      <input type="radio" name="tlx5" value="6" style="width:20px;height:20px"> 6
+      <input type="radio" name="tlx5" value="7" style="width:20px;height:20px"> 7 (Very High)
+      <br/>
+      <br/>
+      <b>6. How insecure, discouraged, irritated, stressed, and annoyed were you when determining the correct answer?</b> <br>
+      <input type="radio" name="tlx6"  value="1" style="width:20px;height:20px" > 1 (Very Low)
+      <input type="radio" name="tlx6" value="2" style="width:20px;height:20px"> 2
+      <input type="radio" name="tlx6" value="3" style="width:20px;height:20px"> 3
+      <input type="radio" name="tlx6" value="4" style="width:20px;height:20px"> 4
+      <input type="radio" name="tlx6" value="5" style="width:20px;height:20px"> 5
+      <input type="radio" name="tlx6" value="6" style="width:20px;height:20px"> 6
+      <input type="radio" name="tlx6" value="7" style="width:20px;height:20px"> 7 (Very High)
+      <br/>
+      <br/>
+      <button type="button" onclick="javascript:satisfactionSurvey();" style="font-size: 22px" align = "center">Submit</button>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+  </div>
+  <br/><br/>
+  </div>
+  </div>
+
+  <div id="satisfactionQs" class="container" style="visibility: hidden; ">
+    <div id="mycanvas" style="position:relative;left:20;top:20; padding-top: 0px; margin:0px; z-index:12">
+      <div id="game-time" class="counter-text">00:00</div>
+      <div id="myimage" style="float:left;border:0px solid red"></div>
+
+  <div  style="padding-right:1%; margin:0px; border:0px solid green ">
+    <p><b>Instructions: Please answer the questions based on the explanations shown in <span style="font-size: 20px" id="sessionIdSurvey"></span>.</b>
+    </p>
+      <hr>
+    <br/>
+    1. The explanations help me <b>understand</b> how the team of robots completes the search and rescue mission.<br/>
+    <input type="radio" name="sat1"  value="1" style="width:20px;height:20px" > 1 (Strongly Disagree) &emsp;
+    <input type="radio" name="sat1" value="2" style="width:20px;height:20px"> 2 (Disagree) &emsp;
+    <input type="radio" name="sat1" value="3" style="width:20px;height:20px"> 3 (Neutral) &emsp;
+    <input type="radio" name="sat1" value="4" style="width:20px;height:20px"> 4 (Agree) &emsp;
+    <input type="radio" name="sat1" value="5" style="width:20px;height:20px"> 5 (Strongly Agree) &emsp;
+    <br/>
+    <br/>
+    2. The explanations are <b>satisfying.</b>  <br>
+    <input type="radio" name="sat2"  value="1" style="width:20px;height:20px" > 1 (Strongly Disagree) &emsp;
+    <input type="radio" name="sat2" value="2" style="width:20px;height:20px"> 2 (Disagree) &emsp;
+    <input type="radio" name="sat2" value="3" style="width:20px;height:20px"> 3 (Neutral) &emsp;
+    <input type="radio" name="sat2" value="4" style="width:20px;height:20px"> 4 (Agree) &emsp;
+    <input type="radio" name="sat2" value="5" style="width:20px;height:20px"> 5 (Strongly Agree) &emsp;
+    <br/>
+    <br/>
+    3. The explanations are <b>sufficiently detailed.</b> <br>
+    <input type="radio" name="sat3"  value="1" style="width:20px;height:20px" > 1 (Strongly Disagree) &emsp;
+    <input type="radio" name="sat3" value="2" style="width:20px;height:20px"> 2 (Disagree) &emsp;
+    <input type="radio" name="sat3" value="3" style="width:20px;height:20px"> 3 (Neutral) &emsp;
+    <input type="radio" name="sat3" value="4" style="width:20px;height:20px"> 4 (Agree) &emsp;
+    <input type="radio" name="sat3" value="5" style="width:20px;height:20px"> 5 (Strongly Agree) &emsp;
+    <br/>
+    <br/>
+    4. The explanations are <b>sufficiently complete,</b> that is, they provide me all the needed information to answer the questions. <br>
+    <input type="radio" name="sat4"  value="1" style="width:20px;height:20px" > 1 (Strongly Disagree) &emsp;
+    <input type="radio" name="sat4" value="2" style="width:20px;height:20px"> 2 (Disagree) &emsp;
+    <input type="radio" name="sat4" value="3" style="width:20px;height:20px"> 3 (Neutral) &emsp;
+    <input type="radio" name="sat4" value="4" style="width:20px;height:20px"> 4 (Agree) &emsp;
+    <input type="radio" name="sat4" value="5" style="width:20px;height:20px"> 5 (Strongly Agree) &emsp;
+    <br/>
+    <br/>
+    5. The explanations are <b>actionable,</b> that is, they help me know how to answer the questions.  <br>
+    <input type="radio" name="sat5"  value="1" style="width:20px;height:20px" > 1 (Strongly Disagree) &emsp;
+    <input type="radio" name="sat5" value="2" style="width:20px;height:20px"> 2 (Disagree) &emsp;
+    <input type="radio" name="sat5" value="3" style="width:20px;height:20px"> 3 (Neutral) &emsp;
+    <input type="radio" name="sat5" value="4" style="width:20px;height:20px"> 4 (Agree) &emsp;
+    <input type="radio" name="sat5" value="5" style="width:20px;height:20px"> 5 (Strongly Agree) &emsp;
+    <br/>
+    <br/>
+    6. The explanations let me know how <b>reliable</b> the robot team is for completing the mission.  <br>
+    <input type="radio" name="sat6"  value="1" style="width:20px;height:20px" > 1 (Strongly Disagree) &emsp;
+    <input type="radio" name="sat6" value="2" style="width:20px;height:20px"> 2 (Disagree) &emsp;
+    <input type="radio" name="sat6" value="3" style="width:20px;height:20px"> 3 (Neutral) &emsp;
+    <input type="radio" name="sat6" value="4" style="width:20px;height:20px"> 4 (Agree) &emsp;
+    <input type="radio" name="sat6" value="5" style="width:20px;height:20px"> 5 (Strongly Agree) &emsp;
+    <br/>
+    <br/>
+    7. The explanations let me know how <b>trustworthy</b> the robot team is for completing the mission. <br>
+    <input type="radio" name="sat7"  value="1" style="width:20px;height:20px" > 1 (Strongly Disagree) &emsp;
+    <input type="radio" name="sat7" value="2" style="width:20px;height:20px"> 2 (Disagree) &emsp;
+    <input type="radio" name="sat7" value="3" style="width:20px;height:20px"> 3 (Neutral) &emsp;
+    <input type="radio" name="sat7" value="4" style="width:20px;height:20px"> 4 (Agree) &emsp;
+    <input type="radio" name="sat7" value="5" style="width:20px;height:20px"> 5 (Strongly Agree) &emsp;
+      <br/>
+      <br/>
+      <button type="button" id="querButton" onclick="javascript:startTask();" style="font-size: 22px" align = "center">Submit</button>
+      <!---<button type="button" id="sumButton" onclick="javascript:startSummary();" style="font-size: 22px" align = "center">Submit</button>-->
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+  </div>
+  <br/><br/>
+  </div>
+  </div>
+
+  <div id="DemoSummary1" class="demo" style="visibility: hidden;">
+  <div class="videoPlay" >
+    <center>
+      <p> This gif shows the current plan that is being executed by the robots and which robots are executing each task.<br/>
+        Tasks disapper when they are completed by the robots. <br/>
+        This mission is over when all the tasks are done.<br/>
+        The robots start on the green square. <br/>
+        Robots are unable to move through or remove red walls.</p>
+      </center>
+      <p id="mapDes" class="leftPadding">
+      </p>
+      <center>
+    <iframe id="mapIframe" src="https://drive.google.com/file/d/16Dtf9j4dsWd5KqUi0F9mT-flb-Vl6-Jv/preview" width="500" height="500"></iframe>
+    <br/>
+  <p>Robots are named using numbers (i.e robot II) and tasks are named using letters (i.e fire A).</p>
+    <p>Note: If the image does not load, <br/>
+      then click "pop-out" in upper right hand corner <br/>
+      to load image in new window.</p>
+      </center>
+  </div>
+
+  <div  id="DemoSummaryInfo1" style="padding-right:1%; margin:0px; border:0px solid green " class="questions" style="visibility: hidden;">
+    <h1>Demonstration</h1>
+    <h3><b>Attention Check Questions</b></h3>
+    <p>Please answer these questions to end the demonstration. </p>
+    <b>1. Which task do the robots do first? </b><br/>
+    <input type="radio" name="sum0"  value="1" style="width:20px;height:20px" > Rescue the Victim <br/>
+    <input type="radio" name="sum0" value="2" style="width:20px;height:20px"> Fight the Fire <br/>
+    <input type="radio" name="sum0"  value="3" style="width:20px;height:20px" > Remove the Obstacle <br/>
+    <br/>
+    <b>2. Which task do the robots do last? </b><br/>
+    <input type="radio" name="sum1"  value="1" style="width:20px;height:20px" > Rescue the Victim <br/>
+    <input type="radio" name="sum1" value="2" style="width:20px;height:20px"> Fight the Fire <br/>
+    <input type="radio" name="sum1"  value="3" style="width:20px;height:20px" > Remove the Obstacle <br/>
+    <br/>
+    <button type="button" onclick="javascript:continueDemoSum();" style="font-size: 22px" align = "center">Submit</button>
+  </div>
+</div>
+
+<div id="DemoSummary2" class="demo" style="visibility: hidden;">
+<div class="videoPlay" >
+  <center>
+    <p> This chart shows the current plan that is being executed by the robots and which robots are executing each task.<br/>
+      Tasks are completed by the robots at the time states in the column.<br/>
+      If a task is in the row for more than one robot, then those robots work together to complete the task. <br/>
+      This mission is over when all the tasks are done.<br/>
+      The robots start on the green square. <br/>
+      Robots are unable to move through or remove red walls.</p>
+    </center>
+    <p id="mapDes" class="leftPadding">
+    </p>
+    <center>
+  <iframe id="mapIframe" src="https://drive.google.com/file/d/1smNgrMmC6iGDBD5TV_Ja3wXYZUGcBQfd/preview" width="500" height="500"></iframe>
+  <br/>
+<p>Robots are named using numbers (i.e robot II) and tasks are named using letters (i.e fire A).</p>
+  <p>Note: If the image does not load, <br/>
+    then click "pop-out" in upper right hand corner <br/>
+    to load image in new window.</p>
+    </center>
+</div>
+
+<div  id="DemoSummaryInfo2" style="padding-right:1%; margin:0px; border:0px solid green " class="questions" style="visibility: hidden;">
+  <h1>Demonstration</h1>
+  <h3><b>Attention Check Questions</b></h3>
+  <p>Please answer these questions to end the demonstration. </p>
+  <b>1. Which robot(s) rescue the vicitm? </b><br/>
+  <input type="radio" name="sum2"  value="1" style="width:20px;height:20px" > Robot I <br/>
+  <input type="radio" name="sum2" value="2" style="width:20px;height:20px"> Robot II <br/>
+  <br/>
+  <b>2. Which robot(s) fight the fire? </b><br/>
+  <input type="radio" name="sum3"  value="1" style="width:20px;height:20px" > Robot I and Robot II <br/>
+  <input type="radio" name="sum3" value="2" style="width:20px;height:20px"> Robot I <br/>
+  <input type="radio" name="sum3" value="3" style="width:20px;height:20px"> Robot II <br/>
+  <br/>
+  <button type="button" onclick="javascript:startSummary();" style="font-size: 22px" align = "center">Submit</button>
+</div>
+</div>
+
+
+
+  <div id="imgCounter" style="visibility: hidden;  position:relative;padding-left: 1%;top:55;width:90%;z-index:10; height:80px; background: #FDFEFE">
+  </div>
+  <div id="imgCounter" style="visibility: hidden;  position:relative;padding-left: 1%;top:-55;width:90%;z-index:10; height:80px; background: #FDFEFE">
+  </div>
+<div id="submitbuttondiv" style="position:absolute; left:25px; top:10px;">
+  <h1> You have finished the survey. Thank you for your time. <h1/>
+  <crowd-button form-action="submit"  id="submitbutton" variant="primary" style="cursor: not-allowed; visibility: hidden;">Finish</crowd-button>
+  <br/>
+  <br/>
+  <br/>
+  <br/>
+</div>
+<input type="hidden" name="finalAnswer" id="finalAnswer" value="noAnswer"/>
+<input type="hidden" name="finalTimes" id="finalTimes" value="noAnswer"/>
+<input type="hidden" name="numCorrect" id="numCorrect" value="noAnswer"/>
+</form>
+<div class="form-popup" id="myForm">
+<form action="/action_page.php" class="form-container">
+  <div class="row">
+  <div class="column">
+  <h3>Task Icons</h3>
+  <iframe id="mapIframe" src="https://drive.google.com/file/d/1HcenngN4Oma058z_zhXY4iLM7OMz7O_O/preview" width="50" height="50">Fire</iframe>
+  <p>Fire</p>
+  <iframe id="mapIframe" src="https://drive.google.com/file/d/1VA48ItO1bs_x4t4BzL0ROj6aB81v69lN/preview" width="50" height="50"></iframe>
+  <p>Obstacle</p>
+  <iframe id="mapIframe" src="https://drive.google.com/file/d/1Kije5I72KwZyVtt4Ucp6uf9ixtrFHmOf/preview" width="50" height="50"></iframe>
+  <p>Victim</p>
+  </div>
+  <div class="column">
+  <h3>Robot Icons</h3>
+  <iframe id="mapIframe" src="https://drive.google.com/file/d/1X-CUhvWBf4tdYAqC_W_Cg5k8J2GILb6W/preview" width="50" height="50"></iframe>
+  <p>Unmanned Ground Vehicle (UGV)</p>
+  <iframe id="mapIframe" src="https://drive.google.com/file/d/1bft6faMKBoX2JQuDZfGORnuazMetkccJ/preview" width="50" height="50"></iframe>
+  <p>Unmanned Aerial Vehicle (UAV)</p>
+  </div>
+  </div>
+  <hr>
+  <h3>Detecting Tasks</h3>
+  <iframe id="mapIframe" src="https://drive.google.com/file/d/1-uC-U6E_RQIwJ3s8MQqQAp7nZJLfuYnY/preview" width="100" height="100"></iframe>
+  <p>A robot is detecting a task when it is located close to it.
+    The robot must be in one of the spaces with a star to detect the task.
+    A task must be detected before it can be completed.
+    For example, the UAV must detect the fire before it can fight the fire.</p>
+  <button type="button" class="btn cancel" onclick="closeForm()">Close</button>
+</form>
+</div>
+<br>
+</crowd-form>
+
+<script>
+  window.onload = function() {
+    timings.startTimestamp = new Date();
+    counterCanvas = document.getElementById("imgCounter")
+    document.getElementById('DemoInfo').style.visibility = "hidden"
+    document.getElementById('DemoInfo').style.height = 0
+    document.getElementById("sumPage").style.display= "none"
+    document.getElementById("DemoSummary1").style.display= "none"
+    document.getElementById("DemoSummary2").style.display= "none"
+    document.getElementById("submitbutton").style.display="none"
+    document.getElementById("submitbuttondiv").style.display="none"
+    document.getElementById('submitbutton').style.visibility = "hidden"
+    document.getElementById('submitbutton').style.height = 0
+    document.getElementById('submitbuttondiv').style.visibility = "hidden"
+    document.getElementById('submitbuttondiv').style.height = 0
+    document.getElementById("mapIframeTrialSecondMap").style.display= "none"
+  }
+</script>
